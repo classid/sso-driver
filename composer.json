@@ -1,0 +1,16 @@
+{
+    "name": "classid/sso-driver",
+    "description": "Driver for SSO Mumtaz",
+    "autoload": {
+        "psr-4": {
+            "Classid\\SsoDriver\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "iqbalatma",
+            "email": "iqbalatma@gmail.com"
+        }
+    ],
+    "require": {}
+}
