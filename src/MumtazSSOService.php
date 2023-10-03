@@ -116,7 +116,10 @@ class MumtazSSOService extends BaseMumtazSSOService implements MumtazSSOServiceI
                     continue;
                 }
 
-                $customErrorHandler($this, $response);
+
+                if ($customErrorHandler){
+                    $customErrorHandler($this, $response);
+                }
 
                 self::mappingErrorHandler($response->json()); //for default response
             }

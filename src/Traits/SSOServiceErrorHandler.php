@@ -32,6 +32,6 @@ trait SSOServiceErrorHandler
      */
     public static function mappingErrorHandler(?array $errorResponse): void
     {
-        throw new SSODriverException("Something went wrong", $errorResponse);
+        throw new SSODriverException($errorResponse["message"], $errorResponse);
     }
 }
