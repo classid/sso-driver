@@ -8,14 +8,20 @@ use Throwable;
 
 class SSODriverException extends Exception
 {
-    public array|null $data;
+    public array|null $errorResponse;
+
     public function __construct(string     $message = "Something went wrong !",
-                                ?array $data = [],
+                                ?array     $errorResponse = [],
                                 int        $code = Response::HTTP_UNAUTHORIZED,
                                 ?Throwable $previous = null
     )
     {
-        $this->data = $data;
+        $this->errorResponse = $errorResponse;
         parent::__construct($message, $code, $previous);
+    }
+
+    public function getErrorResponse():?array
+    {
+        return $this->errorResponse;
     }
 }
