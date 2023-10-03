@@ -49,4 +49,18 @@ abstract class BaseMumtazSSOService
     {
         return $this->baseUrl;
     }
+
+    /**
+     * description : use to reduce value by percentage
+     * (50, 0.2) => 50 - (50 * 0.2)
+     *           => 50 - 10
+     *           => 40
+     * @param int $value
+     * @param float $percentage
+     * @return float
+     */
+    public static function reduceValueByPercentage(int $value, float $percentage): float
+    {
+        return $value - ($value * $percentage);
+    }
 }

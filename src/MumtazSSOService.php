@@ -2,10 +2,12 @@
 
 namespace Classid\SsoDriver;
 
-
-use App\Enums\ResponseCode;
-use App\Exceptions\CidException;
 use Classid\SsoDriver\Abstracts\BaseMumtazSSOService;
+use Classid\SsoDriver\Enums\ResponseCode;
+use Classid\SsoDriver\Exceptions\InvalidClientCredentials;
+use Classid\SsoDriver\Exceptions\InvalidRetryGenerateException;
+use Classid\SsoDriver\Exceptions\SSODriverException;
+use Classid\SsoDriver\Exceptions\UnknownErrorHandlerException;
 use Classid\SsoDriver\Interfaces\MumtazSSOServiceInterface;
 use Classid\SsoDriver\Traits\SSOServiceErrorHandler;
 use Illuminate\Http\Client\Response;
@@ -18,7 +20,7 @@ class MumtazSSOService extends BaseMumtazSSOService implements MumtazSSOServiceI
 
     /**
      * @return $this
-     * @throws CidException
+     * @throws InvalidClientCredentials|UnknownErrorHandlerException
      */
     public function setAuthorizationToken():self
     {
@@ -32,18 +34,19 @@ class MumtazSSOService extends BaseMumtazSSOService implements MumtazSSOServiceI
     /**
      * @param array|null $errorResponse
      * @return bool
-     * @throws CidException
+     * @throws InvalidRetryGenerateException|UnknownErrorHandlerException|InvalidClientCredentials
      */
     public function isRetryOnInvalidAccessToken(?array $errorResponse): bool
     {
         if ($errorResponse["rc"] === ResponseCode::ERR_AUTHENTICATION->name && $errorResponse['message'] === "Unauthenticated.") {
             if ($this->currentRegenerateAttempt > self::RETRY_ATTEMPT_ON_INVALID_ACCESS_TOKEN) {
-                throw new CidException(ResponseCode::ERR_AUTHENTICATION, "Access token invalid after " . self::RETRY_ATTEMPT_ON_INVALID_ACCESS_TOKEN . " retry generate attempt");
+                throw new InvalidRetryGenerateException("Access token invalid after " . self::RETRY_ATTEMPT_ON_INVALID_ACCESS_TOKEN . " retry generate attempt");
             }
 
             $this->addHeaders([
                 "Authorization" => $this->getClientAccessToken(true)
             ]);
+
             return true;
         }
 
@@ -54,11 +57,10 @@ class MumtazSSOService extends BaseMumtazSSOService implements MumtazSSOServiceI
     /**
      * @param bool $isRegenerate
      * @return string
-     * @throws CidException
+     * @throws InvalidClientCredentials|UnknownErrorHandlerException
      */
     public function getClientAccessToken(bool $isRegenerate = false): string
     {
-        Cache::forget(self::ACCESS_TOKEN_CACHE_KEY);
         //client access token is empty, generate new
         if ($isRegenerate || ($clientAccessToken = Cache::get(self::ACCESS_TOKEN_CACHE_KEY)) === null) {
             //hit into oauth/token
@@ -69,21 +71,17 @@ class MumtazSSOService extends BaseMumtazSSOService implements MumtazSSOServiceI
                 "scope" => "*"
             ]);
 
-
             if ($response->failed()){
                 self::unknownResponseErrorHandler($response->json());//for unknown response
-
                 if ($response->json("rc") === ResponseCode::ERR_AUTHENTICATION->name) {
-                    throw new CidException(ResponseCode::ERR_AUTHENTICATION, "Regenerate access token failed. Invalid client credentials !");
+                    throw new InvalidClientCredentials("Regenerate access token failed. Invalid client credentials !");
                 }
-
-                self::mappingErrorHandler($response->json()); //for default response
             }
 
 
             //reduce expired to prevent problem when retrieve token from cache and all progress is still valid,
             //but when hit into server it's already invalid
-            $expiresIn = reduceValueByPercentage($response->json("expires_in"), self::TTL_PERCENTAGE_REDUCER);
+            $expiresIn = self::reduceValueByPercentage($response->json("expires_in"), self::TTL_PERCENTAGE_REDUCER);
             $token = $response->json("access_token");
 
             Cache::put(
@@ -98,12 +96,11 @@ class MumtazSSOService extends BaseMumtazSSOService implements MumtazSSOServiceI
     }
 
 
-
     /**
      * @param callable $request
      * @param callable|null $customErrorHandler
      * @return object|null
-     * @throws CidException
+     * @throws InvalidRetryGenerateException|UnknownErrorHandlerException|InvalidClientCredentials|SSODriverException
      */
     public function getResponse(callable $request, callable $customErrorHandler = null): ?object
     {
@@ -119,7 +116,7 @@ class MumtazSSOService extends BaseMumtazSSOService implements MumtazSSOServiceI
                     continue;
                 }
 
-                $customErrorHandler($this);
+                $customErrorHandler($this, $response);
 
                 self::mappingErrorHandler($response->json()); //for default response
             }
