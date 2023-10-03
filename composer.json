@@ -12,5 +12,7 @@
             "email": "iqbalatma@gmail.com"
         }
     ],
-    "require": {}
+    "require": {
+      "archtechx/enums": "^0.3.2"
+    }
 }
