@@ -1,18 +1,25 @@
 {
-    "name": "classid/sso-driver",
-    "description": "Driver for SSO Mumtaz",
-    "autoload": {
-        "psr-4": {
-            "Classid\\SsoDriver\\": "src/"
-        }
-    },
-    "authors": [
-        {
-            "name": "iqbalatma",
-            "email": "iqbalatma@gmail.com"
-        }
-    ],
-    "require": {
-      "archtechx/enums": "^0.3.2"
+  "name": "classid/sso-driver",
+  "description": "Driver for SSO Mumtaz",
+  "autoload": {
+    "psr-4": {
+      "Classid\\SsoDriver\\": "src/"
     }
+  },
+  "authors": [
+    {
+      "name": "iqbalatma",
+      "email": "iqbalatma@gmail.com"
+    }
+  ],
+  "require": {
+    "archtechx/enums": "^0.3.2"
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Classid\\SsoDriver\\MumtazSSODriverServiceProvider"
+      ]
+    }
+  }
 }

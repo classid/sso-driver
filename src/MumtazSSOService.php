@@ -20,7 +20,7 @@ class MumtazSSOService extends BaseMumtazSSOService implements MumtazSSOServiceI
 
     /**
      * @return $this
-     * @throws InvalidClientCredentials|UnknownErrorHandlerException
+     * @throws InvalidClientCredentials|UnknownErrorHandlerException|SSODriverException
      */
     public function setAuthorizationToken():self
     {
@@ -34,7 +34,7 @@ class MumtazSSOService extends BaseMumtazSSOService implements MumtazSSOServiceI
     /**
      * @param array|null $errorResponse
      * @return bool
-     * @throws InvalidRetryGenerateException|UnknownErrorHandlerException|InvalidClientCredentials
+     * @throws InvalidRetryGenerateException|UnknownErrorHandlerException|InvalidClientCredentials|SSODriverException
      */
     public function isRetryOnInvalidAccessToken(?array $errorResponse): bool
     {
@@ -57,7 +57,7 @@ class MumtazSSOService extends BaseMumtazSSOService implements MumtazSSOServiceI
     /**
      * @param bool $isRegenerate
      * @return string
-     * @throws InvalidClientCredentials|UnknownErrorHandlerException
+     * @throws InvalidClientCredentials|UnknownErrorHandlerException|SSODriverException
      */
     public function getClientAccessToken(bool $isRegenerate = false): string
     {
@@ -76,6 +76,7 @@ class MumtazSSOService extends BaseMumtazSSOService implements MumtazSSOServiceI
                 if ($response->json("rc") === ResponseCode::ERR_AUTHENTICATION->name) {
                     throw new InvalidClientCredentials("Regenerate access token failed. Invalid client credentials !");
                 }
+                self::mappingErrorHandler($response->json());
             }
 
 
