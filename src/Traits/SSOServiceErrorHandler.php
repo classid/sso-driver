@@ -20,7 +20,7 @@ trait SSOServiceErrorHandler
             !isset($errorResponse["rc"]) ||
             $errorResponse["rc"] === ResponseCode::ERR_UNKNOWN ||
             !ResponseCode::tryFromName($errorResponse["rc"])
-        ) { //condition when error response null, rc null (mean exception from sso is not mapped yet), or response code does not exists
+        ) { //condition when error response null, rc null (mean exception from sso is not mapped yet), or response code does not exist
             throw new UnknownErrorHandlerException($errorResponse["message"] ?? "Something went wrong on sso auth");
         }
     }

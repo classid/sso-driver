@@ -1,29 +1,28 @@
 <?php
 
-namespace Classid\SsoDriver;
+namespace Classid\SsoDriver\Services;
 
 use Classid\SsoDriver\Exceptions\InvalidClientCredentials;
 use Classid\SsoDriver\Exceptions\InvalidRetryGenerateException;
 use Classid\SsoDriver\Exceptions\SSODriverException;
 use Classid\SsoDriver\Exceptions\UnknownErrorHandlerException;
-use Classid\SsoDriver\Interfaces\HttpClient;
+use Classid\SsoDriver\Interfaces\HttpClientConfigurationInterface;
 use Classid\SsoDriver\Interfaces\OauthToken;
+use Classid\SsoDriver\Interfaces\SSO;
 use Classid\SsoDriver\Traits\SSOServiceErrorHandler;
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Log;
 
 
-class SSOService implements Interfaces\SSO
+class SSOService implements SSO
 {
     use SSOServiceErrorHandler;
 
     public function __construct(
-        public HttpClient $httpClient,
-        public OauthToken $oauthToken)
+        public HttpClientConfigurationInterface $httpClientConfiguration,
+        public OauthToken                       $oauthToken
+    )
     {
-    }
-
-    public function i(){
-        $this->oauthToken->retryRequestOauthTokenAttempt++;
     }
 
 
@@ -35,7 +34,7 @@ class SSOService implements Interfaces\SSO
      */
     public function setAuthorizationToken(): self
     {
-        $this->httpClient->addHttpRequestHeader("Authorization", $this->oauthToken->getClientAccessToken());
+        $this->httpClientConfiguration->addHttpRequestHeader("Authorization", $this->oauthToken->getClientAccessToken());
         return $this;
     }
 
@@ -43,18 +42,23 @@ class SSOService implements Interfaces\SSO
     /**
      * @param callable $request
      * @param callable|null $customErrorHandler
-     * @return object|null
-     * @throws InvalidRetryGenerateException|UnknownErrorHandlerException|InvalidClientCredentials|SSODriverException
+     * @return array|null
+     * @throws InvalidClientCredentials
+     * @throws InvalidRetryGenerateException
+     * @throws SSODriverException
+     * @throws UnknownErrorHandlerException
      */
-    public function getResponse(callable $request, callable $customErrorHandler = null): ?object
+    public function getResponse(callable $request, callable $customErrorHandler = null): array|null
     {
         do {
             $this->oauthToken->retryRequestOauthTokenAttempt++;
+            Log::info($this->oauthToken->retryRequestOauthTokenAttempt);
             /** @var Response $response */
             $response = $request($this);
 
             if ($response->failed()) {
-                self::unknownResponseErrorHandler($response->json());//for unknown response
+                #for unknown response
+                self::unknownResponseErrorHandler($response->json());
 
                 if ($this->oauthToken->isRetryOnInvalidAccessToken($response->json())) {
                     continue;
@@ -65,11 +69,12 @@ class SSOService implements Interfaces\SSO
                     $customErrorHandler($this, $response);
                 }
 
-                self::mappingErrorHandler($response->json()); //for default response
+                #for default response
+                self::mappingErrorHandler($response->json());
             }
             break;
         } while ($this->oauthToken->retryRequestOauthTokenAttempt <= OauthTokenService::RETRY_ATTEMPT_ON_INVALID_ACCESS_TOKEN);
 
-        return $response->object()->payload->data;
+        return $response->json();
     }
 }

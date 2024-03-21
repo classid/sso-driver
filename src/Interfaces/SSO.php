@@ -22,8 +22,8 @@ interface SSO
     /**
      * @param callable $request
      * @param callable|null $customErrorHandler
-     * @return object|null
+     * @return array|null
      * @throws InvalidRetryGenerateException|UnknownErrorHandlerException|InvalidClientCredentials|SSODriverException
      */
-    public function getResponse(callable $request, callable $customErrorHandler = null): ?object;
+    public function getResponse(callable $request, callable $customErrorHandler = null): array|null;
 }

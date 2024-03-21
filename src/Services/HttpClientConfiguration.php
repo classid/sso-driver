@@ -1,9 +1,11 @@
 <?php
 
-namespace Classid\SsoDriver;
+namespace Classid\SsoDriver\Services;
 
 
-class HttpClientService implements \Classid\SsoDriver\Interfaces\HttpClient
+use Illuminate\Support\Facades\Http;
+
+class HttpClientConfiguration implements \Classid\SsoDriver\Interfaces\HttpClientConfigurationInterface
 {
     public array $httpRequestHeaders;
     public string $baseUrl;
@@ -15,9 +17,9 @@ class HttpClientService implements \Classid\SsoDriver\Interfaces\HttpClient
     }
 
     /**
-     * @return HttpClientService
+     * @return HttpClientConfiguration
      */
-    public function setBaseUrl(): HttpClientService
+    public function setBaseUrl(): HttpClientConfiguration
     {
         $this->baseUrl = rtrim(config("mumtaz_sso_driver.host"), "/");
         return $this;
@@ -33,12 +35,13 @@ class HttpClientService implements \Classid\SsoDriver\Interfaces\HttpClient
 
 
     /**
-     * @return HttpClientService
+     * @return HttpClientConfiguration
      */
-    public function setDefaultHttpRequestHeader(): HttpClientService
+    public function setDefaultHttpRequestHeader(): HttpClientConfiguration
     {
         $this->httpRequestHeaders = [
-            "Accept" => "application/json"
+            "Accept" => "application/json",
+            "Content-Type" => "application/json"
         ];
 
         return $this;
@@ -47,9 +50,9 @@ class HttpClientService implements \Classid\SsoDriver\Interfaces\HttpClient
 
     /**
      * @param array $httpRequestHeaders
-     * @return HttpClientService
+     * @return HttpClientConfiguration
      */
-    public function setHttpRequestHeaders(array $httpRequestHeaders): HttpClientService
+    public function setHttpRequestHeaders(array $httpRequestHeaders): HttpClientConfiguration
     {
         $this->httpRequestHeaders = $httpRequestHeaders;
         return $this;
@@ -59,9 +62,9 @@ class HttpClientService implements \Classid\SsoDriver\Interfaces\HttpClient
     /**
      * @param string $key
      * @param string|array $value
-     * @return HttpClientService
+     * @return HttpClientConfiguration
      */
-    public function addHttpRequestHeader(string $key, string|array $value): HttpClientService
+    public function addHttpRequestHeader(string $key, string|array $value): HttpClientConfiguration
     {
         $this->httpRequestHeaders[$key] = $value;
         return $this;
@@ -70,9 +73,9 @@ class HttpClientService implements \Classid\SsoDriver\Interfaces\HttpClient
 
     /**
      * @param array $httpRequestHeaders
-     * @return HttpClientService
+     * @return HttpClientConfiguration
      */
-    public function addHttpRequestHeaders(array $httpRequestHeaders): HttpClientService
+    public function addHttpRequestHeaders(array $httpRequestHeaders): HttpClientConfiguration
     {
         $this->httpRequestHeaders = array_merge($this->httpRequestHeaders, $httpRequestHeaders);
         return $this;
