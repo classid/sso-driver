@@ -13,7 +13,7 @@
     }
   ],
   "require": {
-    "archtechx/enums": "^0.3.2"
+    "archtechx/enums": "^1.0"
   },
   "extra": {
     "laravel": {
